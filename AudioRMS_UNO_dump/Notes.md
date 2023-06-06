@@ -16,6 +16,8 @@ http://www.unisonic.com.tw/datasheet/U74HC595A.pdf#
 
 Sound sensor(4 pin)
 Pin diagram and sensor @ https://circuitdigest.com/microcontroller-projects/interfacing-sound-sensor-with-arduino
+When sensor potentiometer adjuster is lessthan 512, LED2 will blink, A0 gives range between 0-1023, sensitivity can be adjusted to give 1023 at normal level.
+https://datasheetspdf.com/pdf-file/1402048/Joy-IT/KY-038/1
 
 
 part 1: read sensor input.
