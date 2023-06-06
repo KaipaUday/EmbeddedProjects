@@ -8,6 +8,8 @@ const int audioPin = A0;
 const int numSamples = 50; // change to get smooth value
 float min = 99999;         // used to store the min sound value recorded
 float max = 0;             // used for max sound
+float autocal=1000;
+int flag=0;
 int SpreadBinary[2];
 void setup()
 { // runs once at startup
@@ -28,7 +30,7 @@ void showRMS(int rms, int rms2)
   shiftOut(serialData, shiftClock, MSBFIRST, rms);  // shift out the bits
   digitalWrite(latchClock, HIGH);                   // take the latch pin high so the LEDs will light up
 }
-void spreadValue(float value, float minRange, float maxRange, int spreadMin, int spreadMax, int SpreadBinary[])
+void spreadValue(float value, int SpreadBinary[])
 {
   // Map the value from the input range to the spread range
   // float mappedValue = ((float)(value - minRange) / (float)(maxRange - minRange)) * (float)(spreadMax - spreadMin);
@@ -40,64 +42,107 @@ void spreadValue(float value, float minRange, float maxRange, int spreadMin, int
   {
     SpreadBinary[0] = 255;
     SpreadBinary[1] = 3;
+    return;
   }
   else if (spreadValue > 255)
   {
     SpreadBinary[0] = 255;
     SpreadBinary[1] = 1;
+    return;
   }
   else if (spreadValue > 127)
   {
     SpreadBinary[0] = 255;
     SpreadBinary[1] = 0;
+    return;
+
   }
   else if (spreadValue > 63)
   {
     SpreadBinary[0] = 127;
     SpreadBinary[1] = 0;
+  return;
+
   }
   else if (spreadValue > 31)
   {
     SpreadBinary[0] = 63;
     SpreadBinary[1] = 0;
+  return;
+
   }
   else if (spreadValue > 15)
   {
     SpreadBinary[0] = 31;
     SpreadBinary[1] = 0;
+  return;
+
   }
   else if (spreadValue > 7)
   {
     SpreadBinary[0] = 15;
     SpreadBinary[1] = 0;
+  return;
+
   }
   else if (spreadValue > 3)
   {
     SpreadBinary[0] = 7;
     SpreadBinary[1] = 0;
+  return;
+
   }
   else if (spreadValue > 1)
   {
     SpreadBinary[0] = 3;
     SpreadBinary[1] = 0;
+  return;
+
   }
   else if (spreadValue > 0)
   {
     SpreadBinary[0] = 1;
     SpreadBinary[1] = 0;
+  return;
+
   }
   else
   {
     SpreadBinary[0] = 0;
     SpreadBinary[1] = 0;
+  return;
+
   }
 
   // Serial.println(SpreadBinary[0]+SpreadBinary[1]);
-  return;
 }
 
 void loop()
 {
+  long int sum = 0; // Variable to accumulate the sum of squared samples
+
+  // Collect samples
+  for (int i = 0; i < numSamples; i++)
+  {
+    long int sample = analogRead(audioPin);
+
+    sum += sample * sample; // Square and accumulate the sample
+    // delay(1);  // Small delay between samples
+  }
+  // Calculate RMS value
+  float average = sum / numSamples;
+  float rms = sqrt(average);
+
+  spreadValue(rms-500, SpreadBinary);
+
+  showRMS(SpreadBinary[0], SpreadBinary[1]);
+  delay(10); // so lights are shown for some time.
+}
+
+  // Serial.print("val:");
+  // Serial.print(SpreadBinary[0]);
+  // Serial.print(":");
+  // Serial.println(SpreadBinary[1]);
   /* digital read*/
   // level = analogRead(Sensor);
   // boolean val =digitalRead(audioPin);
@@ -111,38 +156,3 @@ void loop()
 
   /* to check connection*/
   // showRMS(255, 3);
-
-  long int sum = 0; // Variable to accumulate the sum of squared samples
-
-  // Collect samples
-  for (int i = 0; i < numSamples; i++)
-  {
-    long int sample = analogRead(audioPin);
-    if (sample > max)
-    {
-      max = sample;
-      // Serial.print("max updated:");
-      // Serial.println(max);
-    }
-    else if (sample < min)
-    {
-      min = sample;
-      // Serial.print("min updated:");
-      // Serial.println(min);
-    }
-    sum += sample * sample; // Square and accumulate the sample
-    // delay(1);  // Small delay between samples
-  }
-  // Calculate RMS value
-  float average = sum / numSamples;
-  float rms = sqrt(average);
-  Serial.println(rms);
-  // delay(10);  // Delay between measurements
-  spreadValue(rms-34, min, max, 0, 1023, SpreadBinary);
-  // Serial.print("val:");
-  // Serial.print(SpreadBinary[0]);
-  // Serial.print(":");
-  // Serial.println(SpreadBinary[1]);
-  showRMS(SpreadBinary[0], SpreadBinary[1]);
-  // delay(10); // so lights are shown for some time.
-}

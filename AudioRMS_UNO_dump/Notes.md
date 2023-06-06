@@ -9,6 +9,7 @@ https://youtu.be/jIKyPMU5kwk
 
 
 U74HC595AG- 8 bit serial-in shift register(16 pin)
+https://youtu.be/NykONuPWycc
 bottom down to anti clock-wise pin numbering 
 https://www.alldatasheet.com/datasheet-pdf/pdf/742505/UTC/U74HC595AG-D16-T.html
 http://www.unisonic.com.tw/datasheet/U74HC595A.pdf#
