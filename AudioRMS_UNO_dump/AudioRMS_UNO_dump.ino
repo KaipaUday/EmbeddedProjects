@@ -11,6 +11,8 @@ float max = 0;             // used for max sound
 float autocal=1000;
 int flag=0;
 int SpreadBinary[2];
+float filteredValue = 0.0;
+int rawValue = 0;
 void setup()
 { // runs once at startup
   // set pins to output so you can control the shift register
@@ -18,9 +20,21 @@ void setup()
   pinMode(shiftClock, OUTPUT);
   pinMode(latchClock, OUTPUT);
   pinMode(serialData, OUTPUT);
-  Serial.begin(9600);
+  Serial.begin(115200);
   digitalWrite(clearPin, LOW);  // Pin is active-low, this clears the shift register
   digitalWrite(clearPin, HIGH); // Clear pin is inactive
+  // Calculate initial filtered value
+  int samples[numSamples];
+  for (int i = 0; i < numSamples; i++)
+  {
+    samples[i] = analogRead(audioPin);
+  }
+  for (int i = 0; i < numSamples; i++) {
+    filteredValue += samples[i];
+  }
+  filteredValue /= numSamples;
+  Serial.print("Calibrated: ");
+  Serial.println(filteredValue);
 }
 
 void showRMS(int rms, int rms2)
@@ -32,10 +46,11 @@ void showRMS(int rms, int rms2)
 }
 void spreadValue(float value, int SpreadBinary[])
 {
+
   // Map the value from the input range to the spread range
   // float mappedValue = ((float)(value - minRange) / (float)(maxRange - minRange)) * (float)(spreadMax - spreadMin);
   // int spreadValue = int(mappedValue);
-
+  Serial.println(log(value));
   int spreadValue= int(value);
   // to have lower continous incremental instead of discrete.
   if (spreadValue > 511)
@@ -117,26 +132,42 @@ void spreadValue(float value, int SpreadBinary[])
   // Serial.println(SpreadBinary[0]+SpreadBinary[1]);
 }
 
+
 void loop()
 {
-  long int sum = 0; // Variable to accumulate the sum of squared samples
+  // long int sum = 0; // Variable to accumulate the sum of squared samples
+  //int level = analogRead(audioPin);
 
-  // Collect samples
+  int samples[numSamples];
   for (int i = 0; i < numSamples; i++)
   {
-    long int sample = analogRead(audioPin);
-
-    sum += sample * sample; // Square and accumulate the sample
-    // delay(1);  // Small delay between samples
+    samples[i] = analogRead(audioPin);
   }
-  // Calculate RMS value
-  float average = sum / numSamples;
-  float rms = sqrt(average);
 
-  spreadValue(rms-500, SpreadBinary);
+  filteredValue=0;
+  for (int i = 0; i < numSamples; i++)
+  {
+    filteredValue += samples[i]*samples[i];
+  }
+  filteredValue /= numSamples;
 
-  showRMS(SpreadBinary[0], SpreadBinary[1]);
-  delay(10); // so lights are shown for some time.
+
+  
+  // // Collect samples
+  // for (int i = 0; i < numSamples; i++)
+  // {
+  //   long int sample = analogRead(audioPin);
+  //   sum += sample * sample; // Square and accumulate the sample
+  //   // delay(1);  // Small delay between samples
+  // }
+  // // Calculate RMS value
+  // float average = sum / numSamples;
+  // float rms = sqrt(average);
+
+  // spreadValue(rms-filteredValue, SpreadBinary);
+
+  // showRMS(SpreadBinary[0], SpreadBinary[1]);
+  // delay(10); // so lights are shown for some time.
 }
 
   // Serial.print("val:");
