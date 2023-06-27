@@ -1,3 +1,8 @@
+// Constants for filter coefficients and buffer size
+#define BUFFER_SIZE 10  // Buffer size
+
+// Buffer to store previous input samples
+float inputBuffer[BUFFER_SIZE] = {0};
 
 int clearPin = 5;   // Arduino pin 5 connected to Pin 10, SRCLR(Clear/Reset) of 74HC595
 int serialData = 6; // Arduino pin 6 connected to Pin 14, SER(serial input) of 74HC595
@@ -9,6 +14,8 @@ const int numSamples = 255; // change to get smooth value, Overflow occurs for h
 float filteredValue=0.0;
 float calibratedValue;
 int SpreadBinary[2];
+
+
 void setup()
 { // runs once at startup
   // set pins to output so you can control the shift register
@@ -32,6 +39,29 @@ void setup()
   Serial.print("Calibrated: ");
   Serial.println(filteredValue);
   calibratedValue= filteredValue;
+}
+
+// Function to remove DC offset from the audio signal
+float removeDCOffset(float inputSample) {
+  // Shift samples in the buffer
+  for (int i = BUFFER_SIZE - 1; i >= 1; i--) {
+    inputBuffer[i] = inputBuffer[i - 1];
+  }
+  
+  // Add the current input sample to the buffer
+  inputBuffer[0] = inputSample;
+  
+  // Calculate the average of the buffer
+  float sum = 0;
+  for (int i = 0; i < BUFFER_SIZE; i++) {
+    sum += inputBuffer[i];
+  }
+  float average = sum / BUFFER_SIZE;
+  
+  // Subtract the average from the current input sample
+  float outputSample = inputSample - average;
+  
+  return outputSample;
 }
 
 void showRMS(int rms, int rms2)
@@ -156,7 +186,11 @@ void loop()
   //display only if there is some sound, 
   if(rms>calibratedValue){
   //Display the RMS on LED using Shift registers
-  spreadValue(rms-calibratedValue, SpreadBinary);
+  rms=removeDCOffset(rms);
+  // rms=rms+10.00;
+  Serial.println(rms);
+
+  spreadValue(rms, SpreadBinary);
 
   showRMS(SpreadBinary[0], SpreadBinary[1]);
   }
