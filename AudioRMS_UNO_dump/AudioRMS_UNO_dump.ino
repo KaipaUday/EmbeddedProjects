@@ -59,7 +59,8 @@ float removeDCOffset(float inputSample) {
   float average = sum / BUFFER_SIZE;
   
   // Subtract the average from the current input sample
-  float outputSample = inputSample - average;
+  float var=5.0;
+  float outputSample =var+ inputSample - average;
   
   return outputSample;
 }
