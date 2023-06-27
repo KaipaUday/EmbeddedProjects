@@ -7,6 +7,7 @@ const int audioPin = A0;
 
 const int numSamples = 255; // change to get smooth value, Overflow occurs for higher values >400, recommended 255.
 float filteredValue=0.0;
+float calibratedValue;
 int SpreadBinary[2];
 void setup()
 { // runs once at startup
@@ -30,6 +31,7 @@ void setup()
   filteredValue /= numSamples;
   Serial.print("Calibrated: ");
   Serial.println(filteredValue);
+  calibratedValue= filteredValue;
 }
 
 void showRMS(int rms, int rms2)
@@ -38,6 +40,11 @@ void showRMS(int rms, int rms2)
   shiftOut(serialData, shiftClock, MSBFIRST, rms2); // shift out the bits
   shiftOut(serialData, shiftClock, MSBFIRST, rms);  // shift out the bits
   digitalWrite(latchClock, HIGH);                   // take the latch pin high so the LEDs will light up
+  // delay(100);
+  // digitalWrite(latchClock, LOW);                    // take the latchClock low so the LEDs don't change while you're sending in bits:
+  // shiftOut(serialData, shiftClock, MSBFIRST, 0); // shift out the bits
+  // shiftOut(serialData, shiftClock, MSBFIRST, 0);  // shift out the bits
+  // digitalWrite(latchClock, HIGH);                   // take the latch pin high so the LEDs will light up
 }
 void spreadValue(float value, int SpreadBinary[])
 {
@@ -46,7 +53,6 @@ void spreadValue(float value, int SpreadBinary[])
   // float mappedValue = ((float)(value - minRange) / (float)(maxRange - minRange)) * (float)(spreadMax - spreadMin);
   // int spreadValue = int(mappedValue);
   int spreadValue= int(value);
-  Serial.println(spreadValue, value);
 
   // to have lower continous incremental instead of discrete.
   if (spreadValue > 511)
@@ -131,37 +137,29 @@ void spreadValue(float value, int SpreadBinary[])
 
 void loop()
 {
+  //read samples 
   float samples[numSamples];
   for (int i = 0; i < numSamples; i++)
   {
     samples[i] = analogRead(audioPin);
   }
-  for (int i = 0; i < numSamples; i++)
-  {
-    Serial.println(samples[i]);
-  }
+
+  //compute RMS
   filteredValue=0;
-  Serial.println("done");
   for (int i = 0; i < numSamples; i++)
   { 
     filteredValue += samples[i] * samples[i];
-    Serial.println(filteredValue);
   }
   filteredValue /= numSamples;
-  Serial.println("div");
-  
-  Serial.println(filteredValue);
-
   float rms = sqrt(filteredValue);
-  // rms= rms-filteredValue;
-  Serial.println("rms");
+  
+  //display only if there is some sound, 
+  if(rms>calibratedValue){
+  //Display the RMS on LED using Shift registers
+  spreadValue(rms-calibratedValue, SpreadBinary);
 
-  Serial.println(rms);
-  // exit(1);
-  // spreadValue(rms-filteredValue, SpreadBinary);
-  // showRMS(SpreadBinary[0], SpreadBinary[1]);
-  // Serial.println(SpreadBinary[0], SpreadBinary[1]);
+  showRMS(SpreadBinary[0], SpreadBinary[1]);
+  }
 
-  // delay(1000);
   
 }

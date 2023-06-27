@@ -3,7 +3,7 @@ Taking the audio output at the right time.
 and int overflow issue while RMS
 number of samples
 - int int muliplication nd assign to float causes some error.
-
+- Many math operations are not automatically type converted, needed to be careful with data types and size of data type.
 
 Compenents
 
