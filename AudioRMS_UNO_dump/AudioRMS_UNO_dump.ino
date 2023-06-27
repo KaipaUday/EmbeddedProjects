@@ -5,7 +5,7 @@ int shiftClock = 7; // Arduino pin 7 connected to Pin 11, SRCLK(shift clock) of 
 int latchClock = 8; // Arduino pin 8 connected to Pin 12, RCLK(storage/latch clock) of 74HC595 ]
 const int audioPin = A0;
 
-const int numSamples = 3; // change to get smooth value
+const int numSamples = 255; // change to get smooth value, Overflow occurs for higher values >400, recommended 255.
 float filteredValue=0.0;
 int SpreadBinary[2];
 void setup()
