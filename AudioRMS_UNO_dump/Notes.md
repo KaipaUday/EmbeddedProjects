@@ -1,3 +1,10 @@
+Problem:
+Taking the audio output at the right time.
+and int overflow issue while RMS
+number of samples
+- int int muliplication nd assign to float causes some error.
+
+
 Compenents
 
 KYX-B10BGYR LED color array 10 segment
@@ -13,7 +20,11 @@ https://youtu.be/NykONuPWycc
 bottom down to anti clock-wise pin numbering 
 https://www.alldatasheet.com/datasheet-pdf/pdf/742505/UTC/U74HC595AG-D16-T.html
 http://www.unisonic.com.tw/datasheet/U74HC595A.pdf#
-
+int clearPin = 5;   // Arduino pin 5 connected to Pin 10, SRCLR(Clear/Reset) of 74HC595
+int serialData = 6; // Arduino pin 6 connected to Pin 14, SER(serial input) of 74HC595
+int shiftClock = 7; // Arduino pin 7 connected to Pin 11, SRCLK(shift clock) of 74HC595
+int latchClock = 8; // Arduino pin 8 connected to Pin 12, RCLK(storage/latch clock) of 74HC595 ]
+Pin 13 to GND
 
 Sound sensor(4 pin)
 Pin diagram and sensor @ https://circuitdigest.com/microcontroller-projects/interfacing-sound-sensor-with-arduino

@@ -5,7 +5,7 @@ int shiftClock = 7; // Arduino pin 7 connected to Pin 11, SRCLK(shift clock) of 
 int latchClock = 8; // Arduino pin 8 connected to Pin 12, RCLK(storage/latch clock) of 74HC595 ]
 const int audioPin = A0;
 
-const int numSamples = 1024; // change to get smooth value
+const int numSamples = 3; // change to get smooth value
 float filteredValue=0.0;
 int SpreadBinary[2];
 void setup()
@@ -19,7 +19,7 @@ void setup()
   digitalWrite(clearPin, LOW);  // Pin is active-low, this clears the shift register
   digitalWrite(clearPin, HIGH); // Clear pin is inactive
   // Calculate initial filtered value
-  int samples[numSamples];
+  float samples[numSamples];
   for (int i = 0; i < numSamples; i++)
   {
     samples[i] = analogRead(audioPin);
@@ -45,8 +45,9 @@ void spreadValue(float value, int SpreadBinary[])
   // Map the value from the input range to the spread range
   // float mappedValue = ((float)(value - minRange) / (float)(maxRange - minRange)) * (float)(spreadMax - spreadMin);
   // int spreadValue = int(mappedValue);
-  Serial.println(log(value));
   int spreadValue= int(value);
+  Serial.println(spreadValue, value);
+
   // to have lower continous incremental instead of discrete.
   if (spreadValue > 511)
   {
@@ -130,19 +131,37 @@ void spreadValue(float value, int SpreadBinary[])
 
 void loop()
 {
-  int samples[numSamples];
+  float samples[numSamples];
   for (int i = 0; i < numSamples; i++)
   {
     samples[i] = analogRead(audioPin);
   }
-  filteredValue=0;
   for (int i = 0; i < numSamples; i++)
   {
-    filteredValue += samples[i]*samples[i];
+    Serial.println(samples[i]);
+  }
+  filteredValue=0;
+  Serial.println("done");
+  for (int i = 0; i < numSamples; i++)
+  { 
+    filteredValue += samples[i] * samples[i];
+    Serial.println(filteredValue);
   }
   filteredValue /= numSamples;
+  Serial.println("div");
+  
+  Serial.println(filteredValue);
+
   float rms = sqrt(filteredValue);
-  spreadValue(rms-filteredValue, SpreadBinary);
-  showRMS(SpreadBinary[0], SpreadBinary[1]);
+  // rms= rms-filteredValue;
+  Serial.println("rms");
+
+  Serial.println(rms);
+  // exit(1);
+  // spreadValue(rms-filteredValue, SpreadBinary);
+  // showRMS(SpreadBinary[0], SpreadBinary[1]);
+  // Serial.println(SpreadBinary[0], SpreadBinary[1]);
+
+  // delay(1000);
   
 }
