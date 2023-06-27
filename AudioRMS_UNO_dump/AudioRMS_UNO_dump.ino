@@ -1,8 +1,6 @@
 
-#include <arduinoFFT.h>
-
 // Constants for filter coefficients and buffer size
-#define BUFFER_SIZE 10  // Buffer size
+#define BUFFER_SIZE 10  // Buffer size, more buffersize delyed dying down
 // Buffer to store previous input samples
 float inputBuffer[BUFFER_SIZE] = {0};
 
@@ -14,7 +12,6 @@ const int audioPin = A0;
 
 const int numSamples = 255; // change to get smooth value, Overflow occurs for higher values >400, recommended 255.
 float filteredValue=0.0;
-float calibratedValue;
 int SpreadBinary[2];
 
 
@@ -28,19 +25,7 @@ void setup()
   Serial.begin(115200);
   digitalWrite(clearPin, LOW);  // Pin is active-low, this clears the shift register
   digitalWrite(clearPin, HIGH); // Clear pin is inactive
-  // Calculate initial filtered value
-  float samples[numSamples];
-  for (int i = 0; i < numSamples; i++)
-  {
-    samples[i] = analogRead(audioPin);
-  }
-  for (int i = 0; i < numSamples; i++) {
-    filteredValue += samples[i];
-  }
-  filteredValue /= numSamples;
-  Serial.print("Calibrated: ");
-  Serial.println(filteredValue);
-  calibratedValue= filteredValue;
+  
 }
 
 // Function to remove DC offset from the audio signal
@@ -63,7 +48,7 @@ float removeDCOffset(float inputSample) {
     }
   }
   
-  // Subtract the average from the current input sample
+  // Subtract the min from the current input sample
   float outputSample = inputSample - minValue;
   
   return outputSample;
@@ -75,11 +60,7 @@ void showRMS(int rms, int rms2)
   shiftOut(serialData, shiftClock, MSBFIRST, rms2); // shift out the bits
   shiftOut(serialData, shiftClock, MSBFIRST, rms);  // shift out the bits
   digitalWrite(latchClock, HIGH);                   // take the latch pin high so the LEDs will light up
-  // delay(100);
-  // digitalWrite(latchClock, LOW);                    // take the latchClock low so the LEDs don't change while you're sending in bits:
-  // shiftOut(serialData, shiftClock, MSBFIRST, 0); // shift out the bits
-  // shiftOut(serialData, shiftClock, MSBFIRST, 0);  // shift out the bits
-  // digitalWrite(latchClock, HIGH);                   // take the latch pin high so the LEDs will light up
+
 }
 void spreadValue(float value, int SpreadBinary[])
 {
