@@ -54,14 +54,17 @@ float removeDCOffset(float inputSample) {
   inputBuffer[0] = inputSample;
   
   // Calculate the average of the buffer
-  float sum = 0;
-  for (int i = 0; i < BUFFER_SIZE; i++) {
-    sum += inputBuffer[i];
+  float minValue = inputBuffer[0]; // Initialize with the first element of the buffer
+  
+  // Iterate through the buffer to find the minimum value
+  for (int i = 1; i < BUFFER_SIZE; i++) {
+    if (inputBuffer[i] < minValue) {
+      minValue = inputBuffer[i];
+    }
   }
-  float average = sum / BUFFER_SIZE;
   
   // Subtract the average from the current input sample
-  float outputSample = inputSample - average;
+  float outputSample = inputSample - minValue;
   
   return outputSample;
 }
@@ -188,14 +191,15 @@ void loop()
   //display only if there is some sound, 
   // if(rms>calibratedValue){
   //Display the RMS on LED using Shift registers
-  // rms=removeDCOffset(rms);
+  rms=removeDCOffset(rms);
   // rms=rms+10.00;
   // FFT.DCRemoval();
+  rms=rms*2.8;
   Serial.println(rms);
 
   spreadValue(rms, SpreadBinary);
-  showRMS(0,0);
-  // showRMS(SpreadBinary[0], SpreadBinary[1]);
+  // showRMS(0,0);
+  showRMS(SpreadBinary[0], SpreadBinary[1]);
   // }
 
   
