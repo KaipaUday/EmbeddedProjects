@@ -5,6 +5,10 @@ number of samples
 - int int muliplication nd assign to float causes some error.
 - Many math operations are not automatically type converted, needed to be careful with data types and size of data type.
 
+TODO :
+2) 
+1) To give 10 instead of serial
+
 Compenents
 
 KYX-B10BGYR LED color array 10 segment

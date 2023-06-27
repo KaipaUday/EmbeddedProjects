@@ -1,6 +1,8 @@
+
+#include <arduinoFFT.h>
+
 // Constants for filter coefficients and buffer size
 #define BUFFER_SIZE 10  // Buffer size
-
 // Buffer to store previous input samples
 float inputBuffer[BUFFER_SIZE] = {0};
 
@@ -59,8 +61,7 @@ float removeDCOffset(float inputSample) {
   float average = sum / BUFFER_SIZE;
   
   // Subtract the average from the current input sample
-  float var=5.0;
-  float outputSample =var+ inputSample - average;
+  float outputSample = inputSample - average;
   
   return outputSample;
 }
@@ -185,16 +186,17 @@ void loop()
   float rms = sqrt(filteredValue);
   
   //display only if there is some sound, 
-  if(rms>calibratedValue){
+  // if(rms>calibratedValue){
   //Display the RMS on LED using Shift registers
-  rms=removeDCOffset(rms);
+  // rms=removeDCOffset(rms);
   // rms=rms+10.00;
+  // FFT.DCRemoval();
   Serial.println(rms);
 
   spreadValue(rms, SpreadBinary);
-
-  showRMS(SpreadBinary[0], SpreadBinary[1]);
-  }
+  showRMS(0,0);
+  // showRMS(SpreadBinary[0], SpreadBinary[1]);
+  // }
 
   
 }
