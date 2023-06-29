@@ -6,7 +6,7 @@ number of samples
 - Many math operations are not automatically type converted, needed to be careful with data types and size of data type.
 
 TODO :
-2) 
+2) Free running mode
 1) To give 10 instead of serial
 
 Compenents
