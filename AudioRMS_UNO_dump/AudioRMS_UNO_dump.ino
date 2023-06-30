@@ -14,6 +14,12 @@ const int numSamples = 255; // change to get smooth value, Overflow occurs for h
 float filteredValue=0.0;
 int SpreadBinary[2];
 
+//Global Variables
+int sensorPin = A0;        //pin number to use the ADC
+int sensorValue = 0;      //initialization of sensor variable, equivalent to EMA Y
+float EMA_a= 0.1;    //initialization of EMA alpha
+int EMA_S= 0;        //initialization of EMA S
+int highpass = 0;
 
 void setup()
 { // runs once at startup
@@ -26,6 +32,7 @@ void setup()
   digitalWrite(clearPin, LOW);  // Pin is active-low, this clears the shift register
   digitalWrite(clearPin, HIGH); // Clear pin is inactive
   
+  EMA_S = analogRead(sensorPin);      //set EMA S for t=1
 }
 
 // Function to remove DC offset from the audio signal
@@ -154,33 +161,38 @@ void spreadValue(float value, int SpreadBinary[])
 void loop()
 {
   //read samples 
-  float samples[numSamples];
-  for (int i = 0; i < numSamples; i++)
-  {
-    samples[i] = analogRead(audioPin);
-  }
+  // float samples[numSamples];
+  // for (int i = 0; i < numSamples; i++)
+  // {
+  //   samples[i] = analogRead(audioPin);
+  // }
 
+  sensorValue = analogRead(sensorPin);              //read the sensor value using ADC
+  EMA_S = (EMA_a*sensorValue) + ((1-EMA_a)*EMA_S);  //run the EMA
+  highpass = sensorValue - EMA_S;                   //calculate the high-pass signal
+ 
+  Serial.println(highpass);
   //compute RMS
-  filteredValue=0;
-  for (int i = 0; i < numSamples; i++)
-  { 
-    filteredValue += samples[i] * samples[i];
-  }
-  filteredValue /= numSamples;
-  float rms = sqrt(filteredValue);
+  // filteredValue=0;
+  // for (int i = 0; i < numSamples; i++)
+  // { 
+  //   filteredValue += samples[i] * samples[i];
+  // }
+  // filteredValue /= numSamples;
+  // float rms = sqrt(filteredValue);
   
-  //display only if there is some sound, 
-  // if(rms>calibratedValue){
-  //Display the RMS on LED using Shift registers
-  rms=removeDCOffset(rms);
-  // rms=rms+10.00;
-  // FFT.DCRemoval();
-  rms=rms*2.8;
-  Serial.println(rms);
+  // //display only if there is some sound, 
+  // // if(rms>calibratedValue){
+  // //Display the RMS on LED using Shift registers
+  // rms=removeDCOffset(rms);
+  // // rms=rms+10.00;
+  // // FFT.DCRemoval();
+  // rms=rms*2.8;
+  // Serial.println(rms);
 
-  spreadValue(rms, SpreadBinary);
-  // showRMS(0,0);
-  showRMS(SpreadBinary[0], SpreadBinary[1]);
+  // spreadValue(rms, SpreadBinary);
+  // // showRMS(0,0);
+  // showRMS(SpreadBinary[0], SpreadBinary[1]);
   // }
 
   
