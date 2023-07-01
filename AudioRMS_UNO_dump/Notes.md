@@ -9,6 +9,11 @@ TODO :
 2) Free running mode
 1) To give 10 instead of serial
 
+
+Verified using https://github.com/s-marley/ESP32_FFT_VU/blob/master/Sample_test/Sample_test.ino, max freq 8.9khz
+
+
+
 Compenents
 
 KYX-B10BGYR LED color array 10 segment
