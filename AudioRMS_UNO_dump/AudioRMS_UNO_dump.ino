@@ -15,8 +15,9 @@ int latchClock = 8; // Arduino pin 8 connected to Pin 12, RCLK(storage/latch clo
 const int audioPin = A0;
 
 const int numSamples = 128; //  256- works. should be power of 2, maybe need to check for overflow of var for higher num.
-float filteredValue=0.0;
+long  filteredValue=0.0;
 int SpreadBinary[2];
+const int rmsSample = 8;
 //Global Variables
 int sensorPin = A0;        //pin number to use the ADC
 int sensorValue = 0;      //initialization of sensor variable, equivalent to EMA Y
@@ -27,7 +28,8 @@ double samples[numSamples];
 double isamples[numSamples];
 int bandValues[] = {0,0};
 arduinoFFT FFT = arduinoFFT(samples, isamples, numSamples, 8900);
-
+long min=999999;
+long max=-1;
 void setup()
 { // runs once at startup
   // set pins to output so you can control the shift register
@@ -163,30 +165,40 @@ void spreadValue(float value, int SpreadBinary[])
 
   // Serial.println(SpreadBinary[0]+SpreadBinary[1]);
 }
-void loop1(){
-  //read samples 
-  for (int i = 0; i < numSamples; i++) //120us time elapsed=> 4khz is max frequency can be picked
-  {
-    samples[i] = analogRead(audioPin);
+void loop(){
+  for (int i = 0; i<rmsSample; i++){
+    for (int i = 0; i < numSamples; i++) //120us time elapsed=> 4khz is max frequency can be picked
+    {
+      samples[i] = analogRead(audioPin);
+    }
+    for (int i = 0; i < numSamples; i++) //set img to zero
+    {
+      isamples[i] = 0;
+    }
+    for (int i = 0; i<NUM_BANDS; i++){
+      bandValues[i] = 0;
+    }
+    FFT.DCRemoval();
+    FFT.Windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);
+    FFT.Compute(FFT_FORWARD);
+    FFT.ComplexToMagnitude();
+    for (int i = 2; i < (numSamples/2); i++){
+        if (samples[i]>30) bandValues[0]  += (int)samples[i];
+    }
+    if(bandValues[0]>max){
+    max=bandValues[0];
+    }  
+    if(bandValues[0]<min){
+      min=bandValues[0];
+    }
+    long val=  map((long)bandValues[0],min,max,0,1023 );
+    filteredValue+=val*val;
   }
-  for (int i = 0; i < numSamples; i++) //set img to zero
-  {
-    isamples[i] = 0;
-  }
-  for (int i = 0; i<NUM_BANDS; i++){
-    bandValues[i] = 0;
-  }
-  FFT.DCRemoval();
-  FFT.Windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);
-  FFT.Compute(FFT_FORWARD);
-  FFT.ComplexToMagnitude();
-  for (int i = 2; i < (numSamples/2); i++){
-      
-      if (samples[i]>30) bandValues[0]  += (int)samples[i];
-  }
-  Serial.println(bandValues[0]);
-
+  filteredValue /= numSamples;
+  float rms = sqrt(filteredValue);
+  Serial.println(rms);
 }
+
 void loo9p(){
   float samples[20];
   unsigned long s[20];
@@ -210,7 +222,7 @@ void loo9p(){
   exit(1);
 }
 
-void loop(){
+void loo234p(){
 
   for (int i=0; i< 20; i++){
     sensorValue = analogRead(audioPin);              //read the sensor value using ADC
@@ -224,44 +236,43 @@ void loop(){
   // exit(1);
 }
 
-void iloop1()
-{
-  //read samples 
-  float samples[numSamples];
-  for (int i = 0; i < numSamples; i++) //120us time elapsed=> 4khz is max frequency can be picked
-  {
-    samples[i] = analogRead(audioPin);
+// void iloop1()
+// {
+//   //read samples 
+//   float samples[numSamples];
+//   for (int i = 0; i < numSamples; i++) //120us time elapsed=> 4khz is max frequency can be picked
+//   {
+//     samples[i] = analogRead(audioPin);
 
-  }
-  // High-pass (EMA high pass is used)collected values and compute RMS
-  filteredValue=0;
-  for (int i = 0; i < numSamples; i++)
-  { 
-    sensorValue = samples[i];              //read the sensor value using ADC
-    EMA_S = (EMA_a*sensorValue) + ((1-EMA_a)*EMA_S);  //run the EMA
-    highpass = sensorValue - EMA_S;                   //calculate the high-pass signal
-    filteredValue += highpass * highpass;
+//   }
+//   // High-pass (EMA high pass is used)collected values and compute RMS
+//   filteredValue=0;
+//   for (int i = 0; i < numSamples; i++)
+//   { 
+//     sensorValue = samples[i];              //read the sensor value using ADC
+//     EMA_S = (EMA_a*sensorValue) + ((1-EMA_a)*EMA_S);  //run the EMA
+//     highpass = sensorValue - EMA_S;                   //calculate the high-pass signal
+//     filteredValue += highpass * highpass;
 
-  }
-  filteredValue /= numSamples;
-  float rms = sqrt(filteredValue);
-  Serial.print("rms:");
-  Serial.println(rms);
+//   }
+
+//   Serial.print("rms:");
+//   Serial.println(rms);
   
-  // //display only if there is some sound, 
-  // // if(rms>calibratedValue){
-  // //Display the RMS on LED using Shift registers
-  // rms=removeDCOffset(rms);
-  // // rms=rms+10.00;
-  // // FFT.DCRemoval();
-  rms=rms-2;
-  rms=rms*13;
-  // Serial.println(rms);
+//   // //display only if there is some sound, 
+//   // // if(rms>calibratedValue){
+//   // //Display the RMS on LED using Shift registers
+//   // rms=removeDCOffset(rms);
+//   // // rms=rms+10.00;
+//   // // FFT.DCRemoval();
+//   rms=rms-2;
+//   rms=rms*13;
+//   // Serial.println(rms);
 
-  spreadValue(rms, SpreadBinary);
-  // // showRMS(0,0);
-  showRMS(SpreadBinary[0], SpreadBinary[1]);
-  // }
+//   spreadValue(rms, SpreadBinary);
+//   // // showRMS(0,0);
+//   showRMS(SpreadBinary[0], SpreadBinary[1]);
+//   // }
 
   
-}
+// }
