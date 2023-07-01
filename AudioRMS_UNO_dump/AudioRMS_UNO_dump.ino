@@ -165,7 +165,26 @@ void spreadValue(float value, int SpreadBinary[])
 
   // Serial.println(SpreadBinary[0]+SpreadBinary[1]);
 }
+
 void loop(){
+  for (int i = 0; i < numSamples; i++) //120us time elapsed=> 4khz is max frequency can be picked
+  {
+    samples[i] = analogRead(audioPin);
+  }
+  filteredValue=0;
+  for (int i = 0; i < numSamples; i++)
+  { 
+    sensorValue = samples[i];              //read the sensor value using ADC
+    EMA_S = (EMA_a*sensorValue) + ((1-EMA_a)*EMA_S);  //run the EMA
+    highpass = sensorValue - EMA_S;                   //calculate the high-pass signal
+    filteredValue += highpass * highpass;
+  }
+  filteredValue /= numSamples;
+  float rms = sqrt(filteredValue);
+  Serial.println(rms);
+
+}
+void l1231oop(){
   for (int i = 0; i<rmsSample; i++){
     for (int i = 0; i < numSamples; i++) //120us time elapsed=> 4khz is max frequency can be picked
     {
@@ -253,7 +272,6 @@ void loo234p(){
 //     EMA_S = (EMA_a*sensorValue) + ((1-EMA_a)*EMA_S);  //run the EMA
 //     highpass = sensorValue - EMA_S;                   //calculate the high-pass signal
 //     filteredValue += highpass * highpass;
-
 //   }
 
 //   Serial.print("rms:");
