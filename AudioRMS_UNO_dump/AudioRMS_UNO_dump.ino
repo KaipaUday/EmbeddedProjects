@@ -21,7 +21,7 @@ const int rmsSample = 8;
 //Global Variables
 int sensorPin = A0;        //pin number to use the ADC
 int sensorValue = 0;      //initialization of sensor variable, equivalent to EMA Y
-float EMA_a= 0.5;    //initialization of EMA alpha
+float EMA_a= 0.1;    //initialization of EMA alpha
 int EMA_S= 0;        //initialization of EMA S
 int highpass = 0;
 double samples[numSamples];
@@ -44,31 +44,6 @@ void setup()
   EMA_S = analogRead(sensorPin);      //set EMA S for t=1
 }
 
-// Function to remove DC offset from the audio signal
-float removeDCOffset(float inputSample) {
-  // Shift samples in the buffer
-  for (int i = BUFFER_SIZE - 1; i >= 1; i--) {
-    inputBuffer[i] = inputBuffer[i - 1];
-  }
-  
-  // Add the current input sample to the buffer
-  inputBuffer[0] = inputSample;
-  
-  // Calculate the average of the buffer
-  float minValue = inputBuffer[0]; // Initialize with the first element of the buffer
-  
-  // Iterate through the buffer to find the minimum value
-  for (int i = 1; i < BUFFER_SIZE; i++) {
-    if (inputBuffer[i] < minValue) {
-      minValue = inputBuffer[i];
-    }
-  }
-  
-  // Subtract the min from the current input sample
-  float outputSample = inputSample - minValue;
-  
-  return outputSample;
-}
 
 void showRMS(int rms, int rms2)
 {
@@ -181,116 +156,16 @@ void loop(){
   }
   filteredValue /= numSamples;
   float rms = sqrt(filteredValue);
+  rms*=8; // amplify 
   Serial.println(rms);
 
+  // if(rms>max){
+  //   max=rms;
+  // }  
+  // if(rms<min){
+  //     min=rms;
+  // }
+  // long val=  map((long)rms,min,max,0,1023);
+  // Serial.println(val);
+
 }
-void l1231oop(){
-  for (int i = 0; i<rmsSample; i++){
-    for (int i = 0; i < numSamples; i++) //120us time elapsed=> 4khz is max frequency can be picked
-    {
-      samples[i] = analogRead(audioPin);
-    }
-    for (int i = 0; i < numSamples; i++) //set img to zero
-    {
-      isamples[i] = 0;
-    }
-    for (int i = 0; i<NUM_BANDS; i++){
-      bandValues[i] = 0;
-    }
-    FFT.DCRemoval();
-    FFT.Windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);
-    FFT.Compute(FFT_FORWARD);
-    FFT.ComplexToMagnitude();
-    for (int i = 2; i < (numSamples/2); i++){
-        if (samples[i]>30) bandValues[0]  += (int)samples[i];
-    }
-    if(bandValues[0]>max){
-    max=bandValues[0];
-    }  
-    if(bandValues[0]<min){
-      min=bandValues[0];
-    }
-    long val=  map((long)bandValues[0],min,max,0,1023 );
-    filteredValue+=val*val;
-  }
-  filteredValue /= numSamples;
-  float rms = sqrt(filteredValue);
-  Serial.println(rms);
-}
-
-void loo9p(){
-  float samples[20];
-  unsigned long s[20];
-  unsigned long startTime = micros();  // Record the start time
-  for (int i = 0; i < 20; i++)
-  {
-    samples[i] = analogRead(audioPin);
-    s[i]=micros();
-  }
-
-  for (int i = 0; i < 20; i++)
-  {
-    Serial.print("Sensor Value: ");
-    Serial.print(samples[i]);
-    Serial.print("\tElapsed Time between current and next(us): ");
-    unsigned long elapsedTime=s[i+1]-s[i];
-    Serial.println(elapsedTime);
-
-  }
-
-  exit(1);
-}
-
-void loo234p(){
-
-  for (int i=0; i< 20; i++){
-    sensorValue = analogRead(audioPin);              //read the sensor value using ADC
-    EMA_S = (EMA_a*sensorValue) + ((1-EMA_a)*EMA_S);  //run the EMA
-    highpass = sensorValue - EMA_S;                   //calculate the high-pass signal
-    Serial.print("Sen val:");
-    Serial.println(sensorValue);
-    Serial.print("Highpass:");
-    Serial.println(highpass);
-  }
-  // exit(1);
-}
-
-// void iloop1()
-// {
-//   //read samples 
-//   float samples[numSamples];
-//   for (int i = 0; i < numSamples; i++) //120us time elapsed=> 4khz is max frequency can be picked
-//   {
-//     samples[i] = analogRead(audioPin);
-
-//   }
-//   // High-pass (EMA high pass is used)collected values and compute RMS
-//   filteredValue=0;
-//   for (int i = 0; i < numSamples; i++)
-//   { 
-//     sensorValue = samples[i];              //read the sensor value using ADC
-//     EMA_S = (EMA_a*sensorValue) + ((1-EMA_a)*EMA_S);  //run the EMA
-//     highpass = sensorValue - EMA_S;                   //calculate the high-pass signal
-//     filteredValue += highpass * highpass;
-//   }
-
-//   Serial.print("rms:");
-//   Serial.println(rms);
-  
-//   // //display only if there is some sound, 
-//   // // if(rms>calibratedValue){
-//   // //Display the RMS on LED using Shift registers
-//   // rms=removeDCOffset(rms);
-//   // // rms=rms+10.00;
-//   // // FFT.DCRemoval();
-//   rms=rms-2;
-//   rms=rms*13;
-//   // Serial.println(rms);
-
-//   spreadValue(rms, SpreadBinary);
-//   // // showRMS(0,0);
-//   showRMS(SpreadBinary[0], SpreadBinary[1]);
-//   // }
-
-  
-// }
