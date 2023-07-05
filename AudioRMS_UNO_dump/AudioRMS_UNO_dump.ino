@@ -1,25 +1,25 @@
 
 #include <ShiftRegister74HC595.h>
 
-int clearPin = 5;   // Arduino pin 5 connected to Pin 10, SRCLR(Clear/Reset) of 74HC595
-int serialData = 6; // Arduino pin 6 connected to Pin 14, SER(serial input) of 74HC595
-int shiftClock = 7; // Arduino pin 7 connected to Pin 11, SRCLK(shift clock) of 74HC595
-int latchClock = 8; // Arduino pin 8 connected to Pin 12, RCLK(storage/latch clock) of 74HC595 ]
+const int clearPin = 5;   // Arduino pin 5 connected to Pin 10, SRCLR(Clear/Reset) of 74HC595
+const int serialData = 6; // Arduino pin 6 connected to Pin 14, SER(serial input) of 74HC595
+const int shiftClock = 7; // Arduino pin 7 connected to Pin 11, SRCLK(shift clock) of 74HC595
+const int latchClock = 8; // Arduino pin 8 connected to Pin 12, RCLK(storage/latch clock) of 74HC595 ]
 const int audioPin = A0;
 
-#define numRegisters 10 //number of register pins used= leds
-#define FILTER_ORDER 2  // Order of the FIR filter.
-#define BUFFER_SIZE (FILTER_ORDER + 1)   //  more buffersize delyed dying down 
+#define CntSiftRegisters 10 //number of register pins used= leds
+#define HIGH_PASS_FIR_FILTER_ORDER 2  // Order of the FIR filter.
+#define BUFFER_SIZE (HIGH_PASS_FIR_FILTER_ORDER + 1)   //  more buffersize delyed dying down 
 
 float inputBuffer[BUFFER_SIZE] = {0}; //Buffer to store previous input samples used in filtering
-float filterCoefficients[FILTER_ORDER] = {0.999, -0.999 }; // attained from digital filter designer tool- matlab 
+float filterCoefficients[HIGH_PASS_FIR_FILTER_ORDER] = {0.999, -0.999 }; // attained from digital filter designer tool- matlab 
 
 const int numSamples = 128; //  256- works. should be power of 2, maybe need to check for overflow of var for higher num.
-double samples[numSamples]; // variable to batch of analog read values from sensor
+int samples[numSamples]; // variable to batch of analog read values from sensor
 double highPassedVal;  
 
 
-ShiftRegister74HC595<numRegisters> shiftRegister(serialData, shiftClock, latchClock);
+ShiftRegister74HC595<CntSiftRegisters> shiftRegister(serialData, shiftClock, latchClock);
 float updateIntervel; //milli sec, for leds 
 int prevDisplayLevel=0;
 double maxRms=0.0;
@@ -62,14 +62,15 @@ double processFIRFilter(double inputSample) {
   
   return outputSample;
 }
+
 void updateLEDS(int displayLevel){
   /*
   simple function to control shift register pins individually , 
   */
-  if(displayLevel > prevDisplayLevel) displayLevel+=1;
-  else if(displayLevel < prevDisplayLevel) displayLevel-=1;
+  if(displayLevel > prevDisplayLevel && prevDisplayLevel < 10) displayLevel+=1;
+  else if(displayLevel < prevDisplayLevel && prevDisplayLevel > 0) displayLevel-=1;
 
-  for (int i = 0; i < numRegisters; i++) {
+  for (int i = 0; i < CntSiftRegisters; i++) {
     if (i < displayLevel) {
       shiftRegister.set(i, HIGH);  // Turn on the segment
     } else {
