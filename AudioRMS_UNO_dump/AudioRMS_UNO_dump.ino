@@ -18,9 +18,13 @@ const int numSamples = 128; //  256- works. should be power of 2, maybe need to 
 double samples[numSamples]; // variable to batch of analog read values from sensor
 double highPassedVal;  
 
+
 ShiftRegister74HC595<numRegisters> shiftRegister(serialData, shiftClock, latchClock);
 float updateIntervel; //milli sec, for leds 
 int prevDisplayLevel=0;
+double maxRms=0.0;
+unsigned long newTime;
+
 void setup()
 {
   Serial.begin(115200);
@@ -36,7 +40,7 @@ void setup()
   digitalWrite(clearPin, HIGH); // Clear pin is inactive
   Serial.println("Which sensor would you like to read? ex:15,30 ");
   while (Serial.available() == 0)   updateIntervel = 1000000.0/(float) Serial.parseInt();
-
+  newTime=micros();
 }
 
 
@@ -58,6 +62,24 @@ double processFIRFilter(double inputSample) {
   
   return outputSample;
 }
+void updateLEDS(int displayLevel){
+  /*
+  simple function to control shift register pins individually , 
+  */
+  if(displayLevel > prevDisplayLevel) displayLevel+=1;
+  else if(displayLevel < prevDisplayLevel) displayLevel-=1;
+
+  for (int i = 0; i < numRegisters; i++) {
+    if (i < displayLevel) {
+      shiftRegister.set(i, HIGH);  // Turn on the segment
+    } else {
+      shiftRegister.set(i, LOW);   // Turn off the segment
+    }
+  }
+
+  prevDisplayLevel= displayLevel; //update prev val
+
+}
 
 void loop(){
   
@@ -73,24 +95,20 @@ void loop(){
   rms /= numSamples;
   rms = sqrt(rms);
   Serial.println(rms);
-  int displayLevel= round(log10(rms)/log10(2)); //log2(x)= log10(x)/log10(2)
+  if(rms>maxRms)  maxRms=rms;
+
+  if ((micros() - newTime) > updateIntervel) {
+    return; // do not update if time elapsed is smaller
+  }
+  else  {
+    int displayLevel= round(log10(maxRms)/log10(2)); //log2(x)= log10(x)/log10(2)
+    updateLEDS(displayLevel);
+    newTime=micros();
+    maxRms = 0.0;
+  }
+
+}
 
   // Light up the LED bar based on the scaled value-
   //to do : display average instead of the samples until 33.3 ms. we can also have 20 or 15 fps
   // smooth curve between the samples, if curr>pre : preval+1, else <:prev-1 - so it decreses step by step
-  if(displayLevel > prevDisplayLevel) displayLevel+=1;
-  else if(displayLevel < prevDisplayLevel) displayLevel-=1;
-
-  for (int i = 0; i < numRegisters; i++) {
-    unsigned long newTime=micros();
-    if (i < displayLevel) {
-      shiftRegister.set(i, HIGH);  // Turn on the segment
-    } else {
-      shiftRegister.set(i, LOW);   // Turn off the segment
-    }
-    while ((micros() - newTime) < updateIntervel) { /* chill */ }
-  }
-
-  prevDisplayLevel= displayLevel; //update prev val
-
-}
