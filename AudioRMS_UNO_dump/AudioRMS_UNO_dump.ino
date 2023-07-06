@@ -40,6 +40,7 @@ void setup()
   digitalWrite(clearPin, HIGH); // Clear pin is inactive
   Serial.println("Which sensor would you like to read? ex:15,30 ");
   while (Serial.available() == 0)   updateIntervel = 1000000.0/(float) Serial.parseInt();
+  Serial.println(updateIntervel);
   newTime=micros();
 }
 
@@ -56,7 +57,7 @@ double processFIRFilter(double inputSample) {
 
   // Apply the filter
   double outputSample = 0;
-  for (int i = 0; i < FILTER_ORDER; i++) {
+  for (int i = 0; i < HIGH_PASS_FIR_FILTER_ORDER; i++) {
     outputSample += filterCoefficients[i] * inputBuffer[i];
   }
   
@@ -95,10 +96,10 @@ void loop(){
   }
   rms /= numSamples;
   rms = sqrt(rms);
-  Serial.println(rms);
+  // Serial.println(rms);
   if(rms>maxRms)  maxRms=rms;
 
-  if ((micros() - newTime) > updateIntervel) {
+  if ((micros() - newTime) < updateIntervel) {
     return; // do not update if time elapsed is smaller
   }
   else  {
