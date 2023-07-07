@@ -12,7 +12,7 @@ const int audioPin = A0;
 #define BUFFER_SIZE (HIGH_PASS_FIR_FILTER_ORDER + 1)   //  more buffersize delyed dying down 
 
 float inputBuffer[BUFFER_SIZE] = {0}; //Buffer to store previous input samples used in filtering
-float filterCoefficients[HIGH_PASS_FIR_FILTER_ORDER] = {0.999, -0.999 }; // attained from digital filter designer tool- matlab 
+double filterCoefficients[HIGH_PASS_FIR_FILTER_ORDER] = {[0.9138698004564532, -0.9138698004564532] }; // attained from digital filter designer tool- matlab 
 
 const int numSamples = 128; //  256- works. should be power of 2, maybe need to check for overflow of var for higher num.
 int samples[numSamples]; // variable to batch of analog read values from sensor
