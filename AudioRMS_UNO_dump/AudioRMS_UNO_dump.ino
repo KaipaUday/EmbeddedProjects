@@ -6,13 +6,13 @@ const int serialData = 6; // Arduino pin 6 connected to Pin 14, SER(serial input
 const int shiftClock = 7; // Arduino pin 7 connected to Pin 11, SRCLK(shift clock) of 74HC595
 const int latchClock = 8; // Arduino pin 8 connected to Pin 12, RCLK(storage/latch clock) of 74HC595 ]
 const int audioPin = A0;
-
+#define amplification_factor 8 // const multiplication after high to counter attenuation by filter
 #define CntSiftRegisters 10 //number of register pins used= leds
 #define HIGH_PASS_FIR_FILTER_ORDER 2  // Order of the FIR filter.
 #define BUFFER_SIZE (HIGH_PASS_FIR_FILTER_ORDER + 1)   //  more buffersize delyed dying down 
 
 float inputBuffer[BUFFER_SIZE] = {0}; //Buffer to store previous input samples used in filtering
-double filterCoefficients[HIGH_PASS_FIR_FILTER_ORDER] = {[0.9138698004564532, -0.9138698004564532] }; // attained from digital filter designer tool- matlab 
+double filterCoefficients[HIGH_PASS_FIR_FILTER_ORDER] = {0.9138698004564532, -0.9138698004564532 }; // attained from digital filter designer tool- matlab 
 
 const int numSamples = 128; //  256- works. should be power of 2, maybe need to check for overflow of var for higher num.
 int samples[numSamples]; // variable to batch of analog read values from sensor
@@ -91,7 +91,7 @@ void loop(){
   for (int i = 0; i < numSamples; i++)
   { 
     highPassedVal = processFIRFilter(samples[i]);  // pass the value through filter
-    highPassedVal*=8; //amplify filtered value
+    highPassedVal*=amplification_factor; //amplify filtered value
     rms += highPassedVal * highPassedVal;
   }
   rms /= numSamples;
@@ -106,7 +106,7 @@ void loop(){
     int displayLevel= round(log10(maxRms)/log10(2)); //log2(x)= log10(x)/log10(2)
     updateLEDS(displayLevel);
     newTime=micros();
-    maxRms = 0.0;
+    maxRms = 0.0; // set back to zero after displaying the value
   }
 
 }
